@@ -1,0 +1,9 @@
+# XcodeGen output and build products
+*.xcodeproj
+build/
+build-device/
+DerivedData/
+Payload/
+*.ipa
+.DS_Store
+xcuserdata/

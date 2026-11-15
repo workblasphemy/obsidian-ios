@@ -1,0 +1,67 @@
+name: iOS
+
+on:
+  push:
+    paths:
+      - "ObsidianApp/**"
+      - "project.yml"
+      - ".github/workflows/ios.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    # macOS runners are the only way to compile iOS, and this machine has no Mac.
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build for simulator
+        run: |
+          xcodebuild -project Obsidian.xcodeproj -scheme Obsidian \
+            -sdk iphonesimulator -configuration Debug -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO build
+
+      - name: Launch in simulator and screenshot
+        run: |
+          set -euo pipefail
+          DEVICE=$(xcrun simctl list devices available | grep -m1 "iPhone" | sed -E 's/.*\(([-0-9A-F]+)\).*/\1/')
+          echo "Using device $DEVICE"
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
+          APP=build/Build/Products/Debug-iphonesimulator/Obsidian.app
+          xcrun simctl install "$DEVICE" "$APP"
+          xcrun simctl launch "$DEVICE" app.obsidian.ios || true
+          sleep 6
+          xcrun simctl io "$DEVICE" screenshot ../ios-screenshot.png
+
+      - name: Build unsigned device app
+        run: |
+          xcodebuild -project Obsidian.xcodeproj -scheme Obsidian \
+            -sdk iphoneos -configuration Release -derivedDataPath build-device \
+            CODE_SIGNING_ALLOWED=NO build
+
+      - name: Package unsigned ipa
+        run: |
+          mkdir -p Payload
+          cp -R build-device/Build/Products/Release-iphoneos/Obsidian.app Payload/
+          zip -qry Obsidian-unsigned.ipa Payload
+          ls -lh Obsidian-unsigned.ipa
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: obsidian-ios
+          path: |
+            Obsidian-unsigned.ipa
+            ios-screenshot.png
+          if-no-files-found: warn
