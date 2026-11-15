@@ -27,6 +27,12 @@ This is a **standalone project and repository**, deliberately separate from the 
 - No YouTube/Spotify importer. That needs a server-side `yt-dlp` endpoint; the phone cannot do it.
 - No artwork rendering yet (placeholder tile).
 
+## Running CI (manual, to save minutes)
+
+Actions tab -> **iOS** -> **Run workflow**. Toggle `simulator` off for compile-only runs (cheaper);
+leave it on when you need the screenshot. Build products are cached between runs, keyed by a hash of
+`ObsidianApp/**` and `project.yml`.
+
 ## How to get it on the phone
 
 1. Push the repo; Actions runs `iOS` on a macOS runner and uploads `obsidian-ios` (an unsigned
