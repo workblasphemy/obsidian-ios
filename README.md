@@ -33,6 +33,12 @@ Actions tab -> **iOS** -> **Run workflow**. Toggle `simulator` off for compile-o
 leave it on when you need the screenshot. Build products are cached between runs, keyed by a hash of
 `ObsidianApp/**` and `project.yml`.
 
+## If GitHub Actions never gets a runner
+
+`codemagic.yaml` is a fallback that builds the same unsigned `.ipa` on Codemagic's free macOS tier
+(~500 min/month). Connect the repo at codemagic.io and start the `ios-unsigned` workflow; artifacts
+land in the build page.
+
 ## How to get it on the phone
 
 1. Push the repo; Actions runs `iOS` on a macOS runner and uploads `obsidian-ios` (an unsigned

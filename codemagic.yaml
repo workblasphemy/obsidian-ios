@@ -1,0 +1,33 @@
+# Fallback CI. Use this if the GitHub Actions macOS runner never leaves the queue:
+# connect this repo at codemagic.io, and this workflow produces an unsigned .ipa.
+workflows:
+  ios-unsigned:
+    name: iOS unsigned build
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      xcode: latest
+      vars:
+        SCHEME: Obsidian
+    triggering:
+      events: []
+    scripts:
+      - name: Toolchain
+        script: xcodebuild -version
+      - name: Install XcodeGen
+        script: brew install xcodegen
+      - name: Generate project
+        script: xcodegen generate
+      - name: Build device app
+        script: |
+          xcodebuild -project Obsidian.xcodeproj -scheme "$SCHEME" \
+            -sdk iphoneos -configuration Release -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO build
+      - name: Package unsigned ipa
+        script: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/Obsidian.app Payload/
+          zip -qry Obsidian-unsigned.ipa Payload
+          ls -lh Obsidian-unsigned.ipa
+    artifacts:
+      - Obsidian-unsigned.ipa
